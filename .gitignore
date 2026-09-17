@@ -1,0 +1,39 @@
+.claude/
+docs/
+
+ARCHITECTURE.md
+CLAUDE.md
+CODEBASE_REFERENCE.md
+DECISIONS.md
+PROGRESS.md
+ROADMAP.md
+TEST_PLAN.md
+
+# Secrets and local config
+.env
+
+# Databases
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Node
+node_modules/
+dist/
+
+# Go
+/bin/
+*.exe
+
+# Generated code (make gen output; never hand-edited, but not checked in either)
+services/fleet/graph/generated/
+agent/src/gql/
+web/src/gql/
+
+# Eval results
+evals/results/
+
+# Editors / OS
+.DS_Store
+Thumbs.db

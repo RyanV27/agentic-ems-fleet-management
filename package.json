@@ -1,0 +1,14 @@
+{
+  "name": "agentic-fleet-management",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": [
+    "agent",
+    "web",
+    "evals"
+  ],
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^4.1.11"
+  }
+}
