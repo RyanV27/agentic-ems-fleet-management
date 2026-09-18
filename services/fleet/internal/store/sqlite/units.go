@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/ryansamvarghese/agentic-fleet-management/services/fleet/internal/domain"
-	"github.com/ryansamvarghese/agentic-fleet-management/services/fleet/internal/store"
+	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/domain"
+	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/store"
 )
 
 func (s *Store) InsertUnit(ctx context.Context, u domain.Unit) error {

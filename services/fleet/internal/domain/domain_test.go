@@ -17,7 +17,7 @@ func TestDomain_ImportsNothingFromRepo(t *testing.T) {
 	pkg, err := build.ImportDir(".", 0)
 	require.NoError(t, err)
 
-	const modulePrefix = "github.com/ryansamvarghese/agentic-fleet-management"
+	const modulePrefix = "github.com/RyanV27/agentic-ems-fleet-management"
 	for _, imp := range pkg.Imports {
 		assert.False(t, strings.HasPrefix(imp, modulePrefix), "domain must not import %s", imp)
 	}

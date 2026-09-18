@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/ryansamvarghese/agentic-fleet-management/services/fleet/internal/domain"
+	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/domain"
 )
 
 func (s *Store) InsertExtraction(ctx context.Context, e domain.Extraction) error {

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ryansamvarghese/agentic-fleet-management/services/fleet/internal/domain"
-	"github.com/ryansamvarghese/agentic-fleet-management/services/fleet/internal/store"
+	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/domain"
+	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/store"
 )
 
 func (s *Store) InsertZone(ctx context.Context, z domain.Zone) error {

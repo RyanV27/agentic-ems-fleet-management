@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ryansamvarghese/agentic-fleet-management/services/fleet/internal/domain"
+	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/domain"
 )
 
 func newTestAction(id, idempotencyKey string) domain.PendingAction {

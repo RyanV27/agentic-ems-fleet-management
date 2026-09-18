@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ryansamvarghese/agentic-fleet-management/services/fleet/internal/domain"
-	"github.com/ryansamvarghese/agentic-fleet-management/services/fleet/internal/store"
-	"github.com/ryansamvarghese/agentic-fleet-management/services/fleet/internal/store/sqlite"
+	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/domain"
+	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/store"
+	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/store/sqlite"
 )
 
 func newSeededStore(t *testing.T, name string) *sqlite.Store {

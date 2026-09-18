@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/ryansamvarghese/agentic-fleet-management/services/fleet/internal/domain"
+	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/domain"
 )
 
 func (s *Store) InsertDispatchEvent(ctx context.Context, e domain.DispatchEvent) error {

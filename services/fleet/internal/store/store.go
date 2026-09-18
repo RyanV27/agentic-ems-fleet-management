@@ -9,7 +9,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/ryansamvarghese/agentic-fleet-management/services/fleet/internal/domain"
+	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/domain"
 )
 
 // ErrNotFound is returned when a lookup by id finds no row.

@@ -1,4 +1,4 @@
-module github.com/ryansamvarghese/agentic-fleet-management
+module github.com/RyanV27/agentic-ems-fleet-management
 
 go 1.25.0
 
