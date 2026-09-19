@@ -1,0 +1,21 @@
+# gqlgen config (S0 gen wiring, filled in by S2). Schema is split by owning
+# slice into graph/schema.*.graphqls (CLAUDE.md); this glob picks up every
+# one without S2 hardcoding the others' filenames.
+schema:
+  - graph/schema.*.graphqls
+
+exec:
+  filename: graph/generated/generated.go
+  package: generated
+
+model:
+  filename: graph/generated/models_gen.go
+  package: generated
+
+# No resolver: section — resolvers are hand-written under graph/resolver/
+# (one file per query group, CLAUDE.md conventions), not gqlgen-stubbed.
+
+models:
+  Time:
+    model:
+      - github.com/99designs/gqlgen/graphql.Time
