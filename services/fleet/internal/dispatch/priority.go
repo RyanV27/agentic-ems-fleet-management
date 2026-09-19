@@ -21,8 +21,8 @@ type PriorityConfig struct {
 //
 //	severityWeight(severity) + (now - enqueuedAt) * agingRate
 //
-// now is always a parameter — this package never calls time.Now(). The
-// score is computed on every call, never stored.
+// now is always a parameter — this package never reads the system clock
+// itself. The score is computed on every call, never stored.
 func PriorityScore(severity int, enqueuedAt, now time.Time, cfg PriorityConfig) float64 {
 	waitingSeconds := now.Sub(enqueuedAt).Seconds()
 	return cfg.SeverityWeights[severity] + waitingSeconds*cfg.AgingRate
