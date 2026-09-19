@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // Config is every environment-driven constant the fleet service needs at
@@ -54,11 +55,64 @@ func defaultSeverityWeights() map[int]float64 {
 // recorded defaults (CLAUDE.md's config table, the Open Questions register)
 // for anything unset. It never fails on missing API keys — those are only
 // required by make test:live, and make test must pass with none set.
+//
+// Real environment variables always take precedence over a .env file; .env
+// is a local dev convenience (never read by make test, which runs with none
+// of these vars set and must still pass).
 func Load() (Config, error) {
-	return load(os.LookupEnv)
+	return load(envLookup(".env"))
 }
 
 type lookupFunc func(key string) (string, bool)
+
+// envLookup returns a lookupFunc backed by the process environment, falling
+// back to the given .env file (if present) for anything not already set in
+// the environment.
+func envLookup(dotenvPath string) lookupFunc {
+	dotenv := loadDotEnv(dotenvPath)
+	return func(key string) (string, bool) {
+		if v, ok := os.LookupEnv(key); ok {
+			return v, true
+		}
+		v, ok := dotenv[key]
+		return v, ok
+	}
+}
+
+// loadDotEnv does a best-effort parse of a simple KEY=VALUE .env file.
+// A missing file, or any line it can't parse, is silently skipped — this is
+// a dev convenience, not a config format that needs to be enforced.
+func loadDotEnv(path string) map[string]string {
+	values := map[string]string{}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return values
+	}
+
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		key, val, found := strings.Cut(line, "=")
+		if !found {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		val = strings.TrimSpace(val)
+		if strings.HasPrefix(val, "#") {
+			val = ""
+		} else if idx := strings.Index(val, " #"); idx != -1 {
+			val = strings.TrimSpace(val[:idx])
+		}
+		val = strings.Trim(val, `"'`)
+		if key != "" {
+			values[key] = val
+		}
+	}
+	return values
+}
 
 func load(lookup lookupFunc) (Config, error) {
 	cfg := Config{

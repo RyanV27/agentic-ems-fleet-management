@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -86,4 +88,41 @@ func TestLoad_RejectsInvalidValues(t *testing.T) {
 			require.Error(t, err)
 		})
 	}
+}
+
+func TestEnvLookup_FallsBackToDotEnvFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), ".env")
+	require.NoError(t, os.WriteFile(path, []byte(""+
+		"# a comment\n"+
+		"\n"+
+		"OPENROUTER_API_KEY=from-dotenv\n"+
+		"OPENROUTER_EXTRACTION_MODEL= # default: some/model\n"+
+		"OPERATOR_ID=\"quoted-value\"\n",
+	), 0o600))
+
+	t.Setenv("OPENROUTER_API_KEY", "from-process-env")
+
+	lookup := envLookup(path)
+
+	v, ok := lookup("OPENROUTER_API_KEY")
+	assert.True(t, ok)
+	assert.Equal(t, "from-process-env", v, "process env must win over .env")
+
+	v, ok = lookup("OPERATOR_ID")
+	assert.True(t, ok)
+	assert.Equal(t, "quoted-value", v, "surrounding quotes are stripped")
+
+	v, ok = lookup("OPENROUTER_EXTRACTION_MODEL")
+	assert.True(t, ok)
+	assert.Equal(t, "", v, "a bare '# comment' value parses as empty, not the comment text")
+
+	_, ok = lookup("FLEET_DB_PATH")
+	assert.False(t, ok, "a key absent from both process env and .env stays unset")
+}
+
+func TestEnvLookup_MissingDotEnvFileIsNotAnError(t *testing.T) {
+	lookup := envLookup(filepath.Join(t.TempDir(), "does-not-exist.env"))
+
+	_, ok := lookup("OPENROUTER_API_KEY")
+	assert.False(t, ok)
 }
