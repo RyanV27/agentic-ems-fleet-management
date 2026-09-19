@@ -1,0 +1,272 @@
+"""
+S2 — read API. Owns every Query type and the types it returns. Mutation
+types are declared separately in schema.mutation.graphqls (S6) and
+schema.intake.graphqls (S5) so the slices never contend for one file
+(CLAUDE.md, ARCHITECTURE.md §3).
+"""
+
+scalar Time
+
+enum UnitStatus {
+  AVAILABLE
+  EN_ROUTE
+  ON_SCENE
+  TRANSPORTING
+  OUT_OF_SERVICE
+}
+
+enum Capability {
+  BLS
+  ALS
+}
+
+enum CallStatus {
+  PENDING_APPROVAL
+  ESCALATED
+  ASSIGNED
+  EN_ROUTE
+  ON_SCENE
+  TRANSPORTING
+  CLOSED
+  CANCELLED
+}
+
+enum ActionType {
+  ASSIGN_CALL
+  REROUTE_UNIT
+  ASSIGN_BACKUP_UNIT
+  RESOLVE_EVENT
+}
+
+enum ActionStatus {
+  PROPOSED
+  APPROVED
+  EXECUTED
+  REJECTED
+  EXPIRED
+  FAILED
+}
+
+enum ProposedBy {
+  SYSTEM
+  AGENT
+  OPERATOR
+}
+
+enum ExpiredReason {
+  UNIT_REASSIGNED
+  UNIT_OUT_OF_SERVICE
+  CALL_CLOSED
+  SUPERSEDED
+  TTL
+}
+
+enum RejectionReason {
+  WRONG_UNIT
+  INSUFFICIENT_INFO
+  UNSAFE_TIMING
+  OTHER
+}
+
+enum DispatchEventType {
+  DELAY
+  BREAKDOWN
+  REROUTE_NEEDED
+  SEVERITY_CHANGE
+  UNIT_UNAVAILABLE
+}
+
+enum DispatchEventStatus {
+  OPEN
+  RESOLVED
+}
+
+enum RoutingPath {
+  DETERMINISTIC
+  ESCALATED
+}
+
+enum AgentRunStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum AgentRunStopReason {
+  COMPLETED
+  MAX_STEPS
+  INVALID_OUTPUT
+  ERROR
+}
+
+type Unit {
+  id: ID!
+  callsign: String!
+  status: UnitStatus!
+  capability: Capability!
+  zoneId: ID!
+  currentCallId: ID
+  statusChangedAt: Time!
+}
+
+type Extraction {
+  callId: ID!
+  incidentType: String!
+  severity: Int!
+  zoneId: ID!
+  keywords: [String!]!
+  needsTransport: Boolean!
+  confidence: Float!
+  failureReason: String
+  model: String!
+  latencyMs: Int!
+  promptTokens: Int!
+  completionTokens: Int!
+  createdAt: Time!
+}
+
+type Call {
+  id: ID!
+  transcript: String!
+  extraction: Extraction
+  severity: Int!
+  zoneId: ID!
+  status: CallStatus!
+  assignedUnitId: ID
+  destinationHospitalId: ID
+  createdAt: Time!
+  enqueuedAt: Time
+  """
+  Computed at query time from dispatch.PriorityScore, never stored
+  (DEC-020). Null when enqueuedAt is null (the call never entered the
+  operator work queue).
+  """
+  priorityScore: Float
+}
+
+type Zone {
+  id: ID!
+  name: String!
+}
+
+type Hospital {
+  id: ID!
+  name: String!
+  zoneId: ID!
+  capabilities: [String!]!
+  accepting: Boolean!
+}
+
+type DispatchEvent {
+  id: ID!
+  type: DispatchEventType!
+  callId: ID
+  unitId: ID
+  severityDelta: Int
+  status: DispatchEventStatus!
+  note: String!
+  createdAt: Time!
+  resolvedAt: Time
+}
+
+"""
+The human-approval gate and the audit record (DEC-016). payload and
+inputSnapshot below are JSON encoded as a String — Phase 1 has no need for
+a custom JSON scalar, since no gating logic inspects these fields through
+GraphQL.
+"""
+type PendingAction {
+  id: ID!
+  type: ActionType!
+  payload: String!
+  status: ActionStatus!
+  idempotencyKey: String!
+  proposedBy: ProposedBy!
+  rationale: String!
+  expiredReason: ExpiredReason
+  agentRunId: ID
+  rejectionReason: RejectionReason
+  rejectionNote: String
+  parentActionId: ID
+  createdAt: Time!
+  decidedAt: Time
+  decidedBy: String
+}
+
+type RoutingDecision {
+  id: ID!
+  callId: ID!
+  path: RoutingPath!
+  matchedRuleId: String!
+  inputSnapshot: String!
+  decidedAt: Time!
+}
+
+type AgentRun {
+  id: ID!
+  callId: ID!
+  trigger: String!
+  attempt: Int!
+  status: AgentRunStatus!
+  startedAt: Time!
+  endedAt: Time
+  latencyMs: Int
+  promptTokens: Int!
+  completionTokens: Int!
+  costUsd: Float!
+  stopReason: AgentRunStopReason
+}
+
+type ToolCallLog {
+  id: ID!
+  agentRunId: ID!
+  seq: Int!
+  toolName: String!
+  input: String!
+  output: String!
+  latencyMs: Int!
+  error: String
+}
+
+"""
+The fleet board's single aggregate read (FR-17).
+"""
+type FleetStatus {
+  units: [Unit!]!
+  calls: [Call!]!
+  dispatchEvents: [DispatchEvent!]!
+}
+
+"""
+Everything the audit drawer needs for one call (W5): the transcript (via
+call), the routing decision(s), every agent run, and every tool call log
+across those runs, ordered by seq.
+"""
+type CallAudit {
+  call: Call!
+  routingDecisions: [RoutingDecision!]!
+  agentRuns: [AgentRun!]!
+  toolCallLogs: [ToolCallLog!]!
+}
+
+input CallsFilter {
+  status: CallStatus
+  severity: Int
+}
+
+input DispatchEventsFilter {
+  status: DispatchEventStatus
+}
+
+type Query {
+  fleetStatus: FleetStatus!
+  units: [Unit!]!
+  unit(id: ID!): Unit
+  calls(filter: CallsFilter): [Call!]!
+  call(id: ID!): Call
+  dispatchEvents(filter: DispatchEventsFilter): [DispatchEvent!]!
+  pendingActions(status: ActionStatus): [PendingAction!]!
+  zones: [Zone!]!
+  hospitals: [Hospital!]!
+  callAudit(id: ID!): CallAudit
+}

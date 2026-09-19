@@ -11,8 +11,9 @@ setup:
 	npm install
 	"$(MAKE)" gen
 
-# No-op until S2 introduces graph/schema*.graphqls and a gqlgen.yml. Once
-# those exist, this regenerates services/fleet/graph/generated/.
+# Regenerates services/fleet/graph/generated/ from graph/schema.*.graphqls
+# (S2). The guard clause is now dead for this repo but stays cheap insurance
+# against a clean clone that hasn't run `go get -tool` yet.
 gen:
 	@if [ -f services/fleet/gqlgen.yml ]; then \
 		cd services/fleet && go run github.com/99designs/gqlgen generate; \
