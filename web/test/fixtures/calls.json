@@ -1,0 +1,42 @@
+[
+  {
+    "id": "call-1",
+    "transcript": "Caller reports chest pain, difficulty breathing, at 12 Main St.",
+    "extraction": null,
+    "severity": 1,
+    "zoneId": "zone-3",
+    "status": "PENDING_APPROVAL",
+    "assignedUnitId": null,
+    "destinationHospitalId": null,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "enqueuedAt": "2024-01-01T00:00:00Z",
+    "priorityScore": 1000
+  },
+  {
+    "id": "call-2",
+    "transcript": "Caller reports a fall, minor bleeding, at 88 River Rd.",
+    "extraction": {
+      "callId": "call-2",
+      "incidentType": "fall",
+      "severity": 3,
+      "zoneId": "zone-4",
+      "keywords": ["fall", "bleeding"],
+      "needsTransport": true,
+      "confidence": 0.42,
+      "failureReason": null,
+      "model": "google/gemma-4-26b-a4b-it:free",
+      "latencyMs": 820,
+      "promptTokens": 120,
+      "completionTokens": 40,
+      "createdAt": "2024-01-01T00:01:00Z"
+    },
+    "severity": 3,
+    "zoneId": "zone-4",
+    "status": "ESCALATED",
+    "assignedUnitId": null,
+    "destinationHospitalId": null,
+    "createdAt": "2024-01-01T00:01:00Z",
+    "enqueuedAt": "2024-01-01T00:01:00Z",
+    "priorityScore": 10
+  }
+]

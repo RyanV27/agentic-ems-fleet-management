@@ -1,0 +1,13 @@
+[
+  {
+    "id": "event-1",
+    "type": "BREAKDOWN",
+    "callId": "call-1",
+    "unitId": "unit-05",
+    "severityDelta": null,
+    "status": "OPEN",
+    "note": "Unit 5 broke down en route.",
+    "createdAt": "2024-01-01T00:02:00Z",
+    "resolvedAt": null
+  }
+]

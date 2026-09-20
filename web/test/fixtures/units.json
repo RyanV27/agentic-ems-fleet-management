@@ -1,0 +1,5 @@
+[
+  { "id": "unit-01", "callsign": "Medic 1", "status": "AVAILABLE", "capability": "ALS", "zoneId": "zone-1", "currentCallId": null, "statusChangedAt": "2024-01-01T00:00:00Z" },
+  { "id": "unit-02", "callsign": "Medic 2", "status": "AVAILABLE", "capability": "ALS", "zoneId": "zone-1", "currentCallId": null, "statusChangedAt": "2024-01-01T00:00:00Z" },
+  { "id": "unit-05", "callsign": "Medic 5", "status": "EN_ROUTE", "capability": "BLS", "zoneId": "zone-3", "currentCallId": "call-1", "statusChangedAt": "2024-01-01T00:05:00Z" }
+]
