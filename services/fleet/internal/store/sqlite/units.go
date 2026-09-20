@@ -16,7 +16,7 @@ func (s *Store) InsertUnit(ctx context.Context, u domain.Unit) error {
 	if err := checkEnum("capability", u.Capability); err != nil {
 		return err
 	}
-	_, err := s.db.ExecContext(ctx,
+	_, err := s.q(ctx).ExecContext(ctx,
 		`INSERT INTO units (id, callsign, status, capability, zone_id, current_call_id, status_changed_at)
 		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		u.ID, u.Callsign, string(u.Status), string(u.Capability), u.ZoneID,
@@ -28,14 +28,14 @@ func (s *Store) InsertUnit(ctx context.Context, u domain.Unit) error {
 }
 
 func (s *Store) GetUnit(ctx context.Context, id string) (domain.Unit, error) {
-	row := s.db.QueryRowContext(ctx,
+	row := s.q(ctx).QueryRowContext(ctx,
 		`SELECT id, callsign, status, capability, zone_id, current_call_id, status_changed_at
 		 FROM units WHERE id = ?`, id)
 	return scanUnit(row.Scan)
 }
 
 func (s *Store) ListUnits(ctx context.Context) ([]domain.Unit, error) {
-	rows, err := s.db.QueryContext(ctx,
+	rows, err := s.q(ctx).QueryContext(ctx,
 		`SELECT id, callsign, status, capability, zone_id, current_call_id, status_changed_at
 		 FROM units ORDER BY id`)
 	if err != nil {
@@ -61,7 +61,7 @@ func (s *Store) UpdateUnit(ctx context.Context, u domain.Unit) error {
 	if err := checkEnum("capability", u.Capability); err != nil {
 		return err
 	}
-	res, err := s.db.ExecContext(ctx,
+	res, err := s.q(ctx).ExecContext(ctx,
 		`UPDATE units SET callsign = ?, status = ?, capability = ?, zone_id = ?, current_call_id = ?, status_changed_at = ?
 		 WHERE id = ?`,
 		u.Callsign, string(u.Status), string(u.Capability), u.ZoneID,

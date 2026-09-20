@@ -25,7 +25,7 @@ func (s *Store) InsertPendingAction(ctx context.Context, a domain.PendingAction)
 		return domain.PendingAction{}, err
 	}
 
-	_, err := s.db.ExecContext(ctx,
+	_, err := s.q(ctx).ExecContext(ctx,
 		`INSERT INTO pending_actions
 		 (id, type, payload, status, idempotency_key, proposed_by, rationale, expired_reason,
 		  agent_run_id, rejection_reason, rejection_note, parent_action_id, created_at, decided_at, decided_by)
@@ -49,17 +49,17 @@ func (s *Store) InsertPendingAction(ctx context.Context, a domain.PendingAction)
 }
 
 func (s *Store) getPendingActionByIdempotencyKey(ctx context.Context, key string) (domain.PendingAction, error) {
-	row := s.db.QueryRowContext(ctx, pendingActionSelect+` WHERE idempotency_key = ?`, key)
+	row := s.q(ctx).QueryRowContext(ctx, pendingActionSelect+` WHERE idempotency_key = ?`, key)
 	return scanPendingAction(row.Scan)
 }
 
 func (s *Store) GetPendingAction(ctx context.Context, id string) (domain.PendingAction, error) {
-	row := s.db.QueryRowContext(ctx, pendingActionSelect+` WHERE id = ?`, id)
+	row := s.q(ctx).QueryRowContext(ctx, pendingActionSelect+` WHERE id = ?`, id)
 	return scanPendingAction(row.Scan)
 }
 
 func (s *Store) ListPendingActions(ctx context.Context) ([]domain.PendingAction, error) {
-	rows, err := s.db.QueryContext(ctx, pendingActionSelect+` ORDER BY id`)
+	rows, err := s.q(ctx).QueryContext(ctx, pendingActionSelect+` ORDER BY id`)
 	if err != nil {
 		return nil, fmt.Errorf("sqlite: list pending actions: %w", err)
 	}
@@ -80,7 +80,7 @@ func (s *Store) UpdatePendingAction(ctx context.Context, a domain.PendingAction)
 	if err := checkEnum("action status", a.Status); err != nil {
 		return err
 	}
-	res, err := s.db.ExecContext(ctx,
+	res, err := s.q(ctx).ExecContext(ctx,
 		`UPDATE pending_actions
 		 SET status = ?, expired_reason = ?, rejection_reason = ?, rejection_note = ?, decided_at = ?, decided_by = ?
 		 WHERE id = ?`,

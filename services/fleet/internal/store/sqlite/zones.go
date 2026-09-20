@@ -9,7 +9,7 @@ import (
 )
 
 func (s *Store) InsertZone(ctx context.Context, z domain.Zone) error {
-	_, err := s.db.ExecContext(ctx, `INSERT INTO zones (id, name) VALUES (?, ?)`, z.ID, z.Name)
+	_, err := s.q(ctx).ExecContext(ctx, `INSERT INTO zones (id, name) VALUES (?, ?)`, z.ID, z.Name)
 	if err != nil {
 		return fmt.Errorf("sqlite: insert zone %s: %w", z.ID, err)
 	}
@@ -17,7 +17,7 @@ func (s *Store) InsertZone(ctx context.Context, z domain.Zone) error {
 }
 
 func (s *Store) ListZones(ctx context.Context) ([]domain.Zone, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT id, name FROM zones ORDER BY id`)
+	rows, err := s.q(ctx).QueryContext(ctx, `SELECT id, name FROM zones ORDER BY id`)
 	if err != nil {
 		return nil, fmt.Errorf("sqlite: list zones: %w", err)
 	}
@@ -35,7 +35,7 @@ func (s *Store) ListZones(ctx context.Context) ([]domain.Zone, error) {
 }
 
 func (s *Store) InsertZoneTravelTime(ctx context.Context, t domain.ZoneTravelTime) error {
-	_, err := s.db.ExecContext(ctx,
+	_, err := s.q(ctx).ExecContext(ctx,
 		`INSERT INTO zone_travel_times (from_zone_id, to_zone_id, travel_seconds) VALUES (?, ?, ?)`,
 		t.FromZoneID, t.ToZoneID, t.TravelSeconds)
 	if err != nil {
@@ -46,7 +46,7 @@ func (s *Store) InsertZoneTravelTime(ctx context.Context, t domain.ZoneTravelTim
 
 func (s *Store) TravelSeconds(ctx context.Context, fromZoneID, toZoneID string) (int, error) {
 	var seconds int
-	err := s.db.QueryRowContext(ctx,
+	err := s.q(ctx).QueryRowContext(ctx,
 		`SELECT travel_seconds FROM zone_travel_times WHERE from_zone_id = ? AND to_zone_id = ?`,
 		fromZoneID, toZoneID).Scan(&seconds)
 	if err != nil {
@@ -56,7 +56,7 @@ func (s *Store) TravelSeconds(ctx context.Context, fromZoneID, toZoneID string) 
 }
 
 func (s *Store) ListZoneTravelTimes(ctx context.Context) ([]domain.ZoneTravelTime, error) {
-	rows, err := s.db.QueryContext(ctx,
+	rows, err := s.q(ctx).QueryContext(ctx,
 		`SELECT from_zone_id, to_zone_id, travel_seconds FROM zone_travel_times ORDER BY from_zone_id, to_zone_id`)
 	if err != nil {
 		return nil, fmt.Errorf("sqlite: list zone travel times: %w", err)
@@ -79,7 +79,7 @@ func (s *Store) InsertHospital(ctx context.Context, h domain.Hospital) error {
 	if err != nil {
 		return fmt.Errorf("sqlite: insert hospital %s: %w", h.ID, err)
 	}
-	_, err = s.db.ExecContext(ctx,
+	_, err = s.q(ctx).ExecContext(ctx,
 		`INSERT INTO hospitals (id, name, zone_id, capabilities, accepting) VALUES (?, ?, ?, ?, ?)`,
 		h.ID, h.Name, h.ZoneID, capsJSON, boolToInt(h.Accepting))
 	if err != nil {
@@ -89,7 +89,7 @@ func (s *Store) InsertHospital(ctx context.Context, h domain.Hospital) error {
 }
 
 func (s *Store) ListHospitals(ctx context.Context) ([]domain.Hospital, error) {
-	rows, err := s.db.QueryContext(ctx,
+	rows, err := s.q(ctx).QueryContext(ctx,
 		`SELECT id, name, zone_id, capabilities, accepting FROM hospitals ORDER BY id`)
 	if err != nil {
 		return nil, fmt.Errorf("sqlite: list hospitals: %w", err)

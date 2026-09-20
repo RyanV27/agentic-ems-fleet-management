@@ -1,0 +1,103 @@
+"""
+S6 — the approval gate. Owns the Mutation type (CLAUDE.md, ARCHITECTURE.md
+§3: S2 owns Query, S5 owns submitTranscript, S6 owns everything else here).
+
+Every proposeX mutation only inserts a PROPOSED pending_actions row and
+returns it — it never mutates fleet state (DEC-016, ROADMAP S6 c1).
+executeAction is the only mutation that can turn a PROPOSED action into
+EXECUTED and change fleet state for a system/agent-originated proposal.
+assignCall / rerouteUnit / resolveDispatchEvent are the one exception: an
+operator-initiated manual mutation with no PROPOSED phase, because the
+operator's click *is* the approval (DEC-016, ROADMAP S6 c9). All of them
+still return the resulting EXECUTED PendingAction for audit visibility.
+"""
+
+# proposedBy defaults to OPERATOR (the web dashboard's own propose flows).
+# The agent (S7) is a separate process whose only tool surface is this API
+# (CLAUDE.md), so its write tools pass proposedBy: AGENT and agentRunId
+# explicitly — there is no request-level auth in Phase 1 to derive caller
+# identity from (OQ-7), so the caller states it (DEC-038).
+input ProposeAssignCallInput {
+  callId: ID!
+  unitId: ID!
+  rationale: String!
+  proposedBy: ProposedBy! = OPERATOR
+  agentRunId: ID
+}
+
+input ProposeRerouteUnitInput {
+  unitId: ID!
+  callId: ID!
+  rationale: String!
+  proposedBy: ProposedBy! = OPERATOR
+  agentRunId: ID
+}
+
+input ProposeAssignBackupUnitInput {
+  callId: ID!
+  unitId: ID!
+  rationale: String!
+  proposedBy: ProposedBy! = OPERATOR
+  agentRunId: ID
+}
+
+input ProposeResolveEventInput {
+  dispatchEventId: ID!
+  rationale: String!
+  proposedBy: ProposedBy! = OPERATOR
+  agentRunId: ID
+}
+
+type Mutation {
+  """
+  Insert a PROPOSED ASSIGN_CALL action. Does not mutate fleet state.
+  """
+  proposeAssignCall(input: ProposeAssignCallInput!): PendingAction!
+
+  """
+  Insert a PROPOSED REROUTE_UNIT action. Does not mutate fleet state.
+  """
+  proposeRerouteUnit(input: ProposeRerouteUnitInput!): PendingAction!
+
+  """
+  Insert a PROPOSED ASSIGN_BACKUP_UNIT action. Does not mutate fleet state.
+  """
+  proposeAssignBackupUnit(input: ProposeAssignBackupUnitInput!): PendingAction!
+
+  """
+  Insert a PROPOSED RESOLVE_EVENT action. Does not mutate fleet state.
+  """
+  proposeResolveEvent(input: ProposeResolveEventInput!): PendingAction!
+
+  """
+  Approve a PROPOSED action: revalidates preconditions, applies the fleet
+  mutation, and transitions the action to EXECUTED (or FAILED if
+  preconditions no longer hold). The only mutation a human Approve click
+  triggers for a system/agent-originated proposal (DEC-016).
+  """
+  executeAction(actionId: ID!): PendingAction!
+
+  """
+  Reject a PROPOSED action with a structured reason and optional note.
+  Mutates no fleet state and does not dequeue the call.
+  """
+  rejectAction(actionId: ID!, reason: RejectionReason!, note: String): PendingAction!
+
+  """
+  Manual operator mutation: assign unitId to callId immediately, with no
+  proposal. Records an EXECUTED, proposedBy=OPERATOR audit row.
+  """
+  assignCall(callId: ID!, unitId: ID!): PendingAction!
+
+  """
+  Manual operator mutation: reroute unitId onto callId immediately, with no
+  proposal. Records an EXECUTED, proposedBy=OPERATOR audit row.
+  """
+  rerouteUnit(unitId: ID!, callId: ID!): PendingAction!
+
+  """
+  Manual operator mutation: resolve a dispatch event immediately, with no
+  proposal. Records an EXECUTED, proposedBy=OPERATOR audit row.
+  """
+  resolveDispatchEvent(dispatchEventId: ID!): PendingAction!
+}

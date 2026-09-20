@@ -15,7 +15,7 @@ func (s *Store) InsertDispatchEvent(ctx context.Context, e domain.DispatchEvent)
 	if err := checkEnum("dispatch event status", e.Status); err != nil {
 		return err
 	}
-	_, err := s.db.ExecContext(ctx,
+	_, err := s.q(ctx).ExecContext(ctx,
 		`INSERT INTO dispatch_events (id, type, call_id, unit_id, severity_delta, status, note, created_at, resolved_at)
 		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		e.ID, string(e.Type), nullableString(e.CallID), nullableString(e.UnitID),
@@ -28,14 +28,14 @@ func (s *Store) InsertDispatchEvent(ctx context.Context, e domain.DispatchEvent)
 }
 
 func (s *Store) GetDispatchEvent(ctx context.Context, id string) (domain.DispatchEvent, error) {
-	row := s.db.QueryRowContext(ctx,
+	row := s.q(ctx).QueryRowContext(ctx,
 		`SELECT id, type, call_id, unit_id, severity_delta, status, note, created_at, resolved_at
 		 FROM dispatch_events WHERE id = ?`, id)
 	return scanDispatchEvent(row.Scan)
 }
 
 func (s *Store) ListDispatchEvents(ctx context.Context) ([]domain.DispatchEvent, error) {
-	rows, err := s.db.QueryContext(ctx,
+	rows, err := s.q(ctx).QueryContext(ctx,
 		`SELECT id, type, call_id, unit_id, severity_delta, status, note, created_at, resolved_at
 		 FROM dispatch_events ORDER BY id`)
 	if err != nil {
@@ -58,7 +58,7 @@ func (s *Store) UpdateDispatchEvent(ctx context.Context, e domain.DispatchEvent)
 	if err := checkEnum("dispatch event status", e.Status); err != nil {
 		return err
 	}
-	res, err := s.db.ExecContext(ctx,
+	res, err := s.q(ctx).ExecContext(ctx,
 		`UPDATE dispatch_events SET status = ?, note = ?, resolved_at = ? WHERE id = ?`,
 		string(e.Status), e.Note, nullableTimeToString(e.ResolvedAt), e.ID)
 	if err != nil {

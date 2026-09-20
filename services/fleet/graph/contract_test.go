@@ -15,11 +15,15 @@ import (
 
 	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/graph/generated"
 	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/graph/resolver"
+	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/actions"
 	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/dispatch"
 	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/domain"
 	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/store"
 	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/store/sqlite"
 )
+
+const testOperatorID = "operator-1"
+const testTTLSeconds = 600
 
 // fixedClock always returns the same instant, so priorityScore assertions
 // in these tests are deterministic.
@@ -45,10 +49,15 @@ func newTestServer(t *testing.T, now time.Time) (*httptest.Server, store.Store) 
 	require.NoError(t, s.Migrate(ctx))
 	require.NoError(t, store.Seed(ctx, s))
 
+	q := dispatch.NewQueue(testPriorityConfig)
+	clock := fixedClock{now: now}
+	mgr := actions.NewManager(s, q, clock, testOperatorID, testTTLSeconds)
+
 	res := &resolver.Resolver{
 		Store:          s,
-		Clock:          fixedClock{now: now},
+		Clock:          clock,
 		PriorityConfig: testPriorityConfig,
+		Manager:        mgr,
 	}
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: res}))
 	return httptest.NewServer(srv), s

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/graph/generated"
+	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/actions"
 	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/dispatch"
 	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/store"
 )
@@ -22,6 +23,9 @@ type Resolver struct {
 	Clock Clock
 	// PriorityConfig feeds dispatch.PriorityScore for Call.priorityScore.
 	PriorityConfig dispatch.PriorityConfig
+	// Manager is the S6 approval gate. Every mutation resolver delegates to
+	// it; no resolver ever mutates fleet state itself (DEC-016).
+	Manager *actions.Manager
 }
 
 // Clock supplies "now" to resolvers that need it. Structurally compatible
@@ -35,3 +39,8 @@ type Clock interface {
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
 type queryResolver struct{ *Resolver }
+
+// Mutation returns the MutationResolver implementation.
+func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
+
+type mutationResolver struct{ *Resolver }

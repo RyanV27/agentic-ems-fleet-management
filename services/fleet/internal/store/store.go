@@ -21,6 +21,13 @@ var ErrNotFound = errors.New("store: not found")
 type Store interface {
 	Migrate(ctx context.Context) error
 
+	// WithTx runs fn in a single database transaction: every Store method
+	// called with the ctx fn receives joins that transaction. A non-nil
+	// return from fn rolls back; nil commits. Needed by executeAction
+	// (ROADMAP S6 c2), whose precondition check and state mutation must be
+	// atomic.
+	WithTx(ctx context.Context, fn func(ctx context.Context) error) error
+
 	// Zones and hospitals.
 	InsertZone(ctx context.Context, z domain.Zone) error
 	ListZones(ctx context.Context) ([]domain.Zone, error)

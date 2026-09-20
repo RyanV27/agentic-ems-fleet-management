@@ -12,7 +12,7 @@ func (s *Store) InsertRoutingDecision(ctx context.Context, d domain.RoutingDecis
 	if err := checkEnum("routing path", d.Path); err != nil {
 		return err
 	}
-	_, err := s.db.ExecContext(ctx,
+	_, err := s.q(ctx).ExecContext(ctx,
 		`INSERT INTO routing_decisions (id, call_id, path, matched_rule_id, input_snapshot, decided_at)
 		 VALUES (?, ?, ?, ?, ?, ?)`,
 		d.ID, d.CallID, string(d.Path), d.MatchedRuleID, string(d.InputSnapshot), timeToString(d.DecidedAt))
@@ -23,7 +23,7 @@ func (s *Store) InsertRoutingDecision(ctx context.Context, d domain.RoutingDecis
 }
 
 func (s *Store) ListRoutingDecisionsByCallID(ctx context.Context, callID string) ([]domain.RoutingDecision, error) {
-	rows, err := s.db.QueryContext(ctx,
+	rows, err := s.q(ctx).QueryContext(ctx,
 		`SELECT id, call_id, path, matched_rule_id, input_snapshot, decided_at
 		 FROM routing_decisions WHERE call_id = ? ORDER BY decided_at`, callID)
 	if err != nil {
@@ -55,7 +55,7 @@ func (s *Store) InsertAgentRun(ctx context.Context, r domain.AgentRun) error {
 	if err := checkEnum("agent run status", r.Status); err != nil {
 		return err
 	}
-	_, err := s.db.ExecContext(ctx,
+	_, err := s.q(ctx).ExecContext(ctx,
 		`INSERT INTO agent_runs
 		 (id, call_id, trigger, attempt, status, started_at, ended_at, latency_ms, prompt_tokens, completion_tokens, cost_usd, stop_reason)
 		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -72,7 +72,7 @@ func (s *Store) UpdateAgentRun(ctx context.Context, r domain.AgentRun) error {
 	if err := checkEnum("agent run status", r.Status); err != nil {
 		return err
 	}
-	res, err := s.db.ExecContext(ctx,
+	res, err := s.q(ctx).ExecContext(ctx,
 		`UPDATE agent_runs
 		 SET status = ?, ended_at = ?, latency_ms = ?, prompt_tokens = ?, completion_tokens = ?, cost_usd = ?, stop_reason = ?
 		 WHERE id = ?`,
@@ -85,12 +85,12 @@ func (s *Store) UpdateAgentRun(ctx context.Context, r domain.AgentRun) error {
 }
 
 func (s *Store) GetAgentRun(ctx context.Context, id string) (domain.AgentRun, error) {
-	row := s.db.QueryRowContext(ctx, agentRunSelect+` WHERE id = ?`, id)
+	row := s.q(ctx).QueryRowContext(ctx, agentRunSelect+` WHERE id = ?`, id)
 	return scanAgentRun(row.Scan)
 }
 
 func (s *Store) ListAgentRunsByCallID(ctx context.Context, callID string) ([]domain.AgentRun, error) {
-	rows, err := s.db.QueryContext(ctx, agentRunSelect+` WHERE call_id = ? ORDER BY started_at`, callID)
+	rows, err := s.q(ctx).QueryContext(ctx, agentRunSelect+` WHERE call_id = ? ORDER BY started_at`, callID)
 	if err != nil {
 		return nil, fmt.Errorf("sqlite: list agent runs for call %s: %w", callID, err)
 	}
@@ -158,7 +158,7 @@ func scanStopReason(ns sql.NullString) (*domain.AgentRunStopReason, error) {
 }
 
 func (s *Store) InsertToolCallLog(ctx context.Context, l domain.ToolCallLog) error {
-	_, err := s.db.ExecContext(ctx,
+	_, err := s.q(ctx).ExecContext(ctx,
 		`INSERT INTO tool_call_logs (id, agent_run_id, seq, tool_name, input, output, latency_ms, error)
 		 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		l.ID, l.AgentRunID, l.Seq, l.ToolName, string(l.Input), nullableJSON(l.Output), l.LatencyMs, nullableString(l.Error))
@@ -169,7 +169,7 @@ func (s *Store) InsertToolCallLog(ctx context.Context, l domain.ToolCallLog) err
 }
 
 func (s *Store) ListToolCallLogsByAgentRunID(ctx context.Context, agentRunID string) ([]domain.ToolCallLog, error) {
-	rows, err := s.db.QueryContext(ctx,
+	rows, err := s.q(ctx).QueryContext(ctx,
 		`SELECT id, agent_run_id, seq, tool_name, input, output, latency_ms, error
 		 FROM tool_call_logs WHERE agent_run_id = ? ORDER BY seq`, agentRunID)
 	if err != nil {

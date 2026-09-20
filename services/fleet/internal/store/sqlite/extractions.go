@@ -15,7 +15,7 @@ func (s *Store) InsertExtraction(ctx context.Context, e domain.Extraction) error
 	if err != nil {
 		return fmt.Errorf("sqlite: insert extraction for call %s: %w", e.CallID, err)
 	}
-	_, err = s.db.ExecContext(ctx,
+	_, err = s.q(ctx).ExecContext(ctx,
 		`INSERT INTO extractions
 		 (id, call_id, incident_type, severity, zone_id, keywords, needs_transport, confidence,
 		  failure_reason, model, latency_ms, prompt_tokens, completion_tokens, raw_response, created_at)
@@ -32,7 +32,7 @@ func (s *Store) InsertExtraction(ctx context.Context, e domain.Extraction) error
 }
 
 func (s *Store) GetExtractionByCallID(ctx context.Context, callID string) (domain.Extraction, error) {
-	row := s.db.QueryRowContext(ctx,
+	row := s.q(ctx).QueryRowContext(ctx,
 		`SELECT call_id, incident_type, severity, zone_id, keywords, needs_transport, confidence,
 		        failure_reason, model, latency_ms, prompt_tokens, completion_tokens, raw_response, created_at
 		 FROM extractions WHERE call_id = ?`, callID)

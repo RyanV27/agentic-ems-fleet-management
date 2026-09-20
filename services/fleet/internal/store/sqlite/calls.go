@@ -13,7 +13,7 @@ func (s *Store) InsertCall(ctx context.Context, c domain.Call) error {
 	if err := checkEnum("call status", c.Status); err != nil {
 		return err
 	}
-	_, err := s.db.ExecContext(ctx,
+	_, err := s.q(ctx).ExecContext(ctx,
 		`INSERT INTO calls (id, transcript, severity, zone_id, status, assigned_unit_id, destination_hospital_id, created_at, enqueued_at)
 		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		c.ID, c.Transcript, c.Severity, c.ZoneID, string(c.Status),
@@ -26,14 +26,14 @@ func (s *Store) InsertCall(ctx context.Context, c domain.Call) error {
 }
 
 func (s *Store) GetCall(ctx context.Context, id string) (domain.Call, error) {
-	row := s.db.QueryRowContext(ctx,
+	row := s.q(ctx).QueryRowContext(ctx,
 		`SELECT id, transcript, severity, zone_id, status, assigned_unit_id, destination_hospital_id, created_at, enqueued_at
 		 FROM calls WHERE id = ?`, id)
 	return scanCall(row.Scan)
 }
 
 func (s *Store) ListCalls(ctx context.Context) ([]domain.Call, error) {
-	rows, err := s.db.QueryContext(ctx,
+	rows, err := s.q(ctx).QueryContext(ctx,
 		`SELECT id, transcript, severity, zone_id, status, assigned_unit_id, destination_hospital_id, created_at, enqueued_at
 		 FROM calls ORDER BY id`)
 	if err != nil {
@@ -58,7 +58,7 @@ func (s *Store) UpdateCall(ctx context.Context, c domain.Call) error {
 	if err := checkEnum("call status", c.Status); err != nil {
 		return err
 	}
-	res, err := s.db.ExecContext(ctx,
+	res, err := s.q(ctx).ExecContext(ctx,
 		`UPDATE calls SET transcript = ?, severity = ?, zone_id = ?, status = ?, assigned_unit_id = ?, destination_hospital_id = ?
 		 WHERE id = ?`,
 		c.Transcript, c.Severity, c.ZoneID, string(c.Status),
@@ -72,7 +72,7 @@ func (s *Store) UpdateCall(ctx context.Context, c domain.Call) error {
 // SetCallEnqueuedAt sets enqueued_at to now iff it is currently NULL,
 // reporting whether this call actually set it.
 func (s *Store) SetCallEnqueuedAt(ctx context.Context, callID string, now time.Time) (bool, error) {
-	res, err := s.db.ExecContext(ctx,
+	res, err := s.q(ctx).ExecContext(ctx,
 		`UPDATE calls SET enqueued_at = ? WHERE id = ? AND enqueued_at IS NULL`,
 		timeToString(now), callID)
 	if err != nil {
