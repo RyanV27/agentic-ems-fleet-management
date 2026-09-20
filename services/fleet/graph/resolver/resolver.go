@@ -11,6 +11,7 @@ import (
 	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/graph/generated"
 	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/actions"
 	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/dispatch"
+	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/intake"
 	"github.com/RyanV27/agentic-ems-fleet-management/services/fleet/internal/store"
 )
 
@@ -26,6 +27,8 @@ type Resolver struct {
 	// Manager is the S6 approval gate. Every mutation resolver delegates to
 	// it; no resolver ever mutates fleet state itself (DEC-016).
 	Manager *actions.Manager
+	// Intake is the S5 orchestrator submitTranscript delegates to.
+	Intake *intake.Handler
 }
 
 // Clock supplies "now" to resolvers that need it. Structurally compatible

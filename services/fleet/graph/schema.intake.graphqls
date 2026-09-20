@@ -1,0 +1,27 @@
+"""
+S5 — intake orchestration. Owns the one submitTranscript mutation: the entry
+point that turns a raw transcript into a Call, decided and proposed-or-
+escalated by internal/intake (S2 owns Query, S6 owns the rest of Mutation —
+CLAUDE.md, ARCHITECTURE.md §3).
+"""
+
+input SubmitTranscriptInput {
+  transcript: String!
+  """
+  Caller-supplied zone fallback (OQ-13), used only when extraction fails to
+  produce a zone from the transcript itself. Never overrides a zone the
+  transcript yielded.
+  """
+  zoneHint: ID
+}
+
+extend type Mutation {
+  """
+  Runs one transcript through the full intake pipeline: extraction, the
+  routing decision, and either a SYSTEM proposal (deterministic path) or
+  asynchronous agent triage (escalated path). Returns once the call is
+  created, decided, and enqueued — escalation triage happens in the
+  background and never delays this response (ARCHITECTURE.md §6 boundary 2).
+  """
+  submitTranscript(input: SubmitTranscriptInput!): Call!
+}
