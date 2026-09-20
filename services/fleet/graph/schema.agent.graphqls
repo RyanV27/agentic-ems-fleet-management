@@ -1,0 +1,55 @@
+"""
+S7 — TS agent run telemetry. Owns the write side of AgentRun/ToolCallLog
+(S2 owns their read side, exposed via CallAudit; S6 owns the rest of
+Mutation — CLAUDE.md, ARCHITECTURE.md §3). The Mastra agent's only tool
+surface is this GraphQL API (CLAUDE.md conventions), so it persists its own
+run/tool-call audit trail through these mutations instead of writing to the
+store directly. These are telemetry inserts, not a fleet-state mutation —
+hard rule 1 / DEC-016's human-approval gate governs pending_actions, not
+agent_runs/tool_call_logs, so none of these three go through actions.Manager
+(DEC-041).
+"""
+
+input StartAgentRunInput {
+  callId: ID!
+  trigger: String!
+  attempt: Int!
+}
+
+input RecordToolCallLogInput {
+  agentRunId: ID!
+  seq: Int!
+  toolName: String!
+  input: String!
+  output: String!
+  latencyMs: Int!
+  error: String
+}
+
+input CompleteAgentRunInput {
+  agentRunId: ID!
+  status: AgentRunStatus!
+  stopReason: AgentRunStopReason
+  promptTokens: Int!
+  completionTokens: Int!
+  costUsd: Float!
+  latencyMs: Int!
+}
+
+extend type Mutation {
+  """
+  Inserts a RUNNING AgentRun row at the start of one triage invocation.
+  """
+  startAgentRun(input: StartAgentRunInput!): AgentRun!
+
+  """
+  Appends one ToolCallLog row, ordered by seq, for an in-progress AgentRun.
+  """
+  recordToolCallLog(input: RecordToolCallLogInput!): ToolCallLog!
+
+  """
+  Finalizes an AgentRun: sets status, stopReason, token counts, cost, and
+  latency. Never touches pending_actions or fleet state.
+  """
+  completeAgentRun(input: CompleteAgentRunInput!): AgentRun!
+}

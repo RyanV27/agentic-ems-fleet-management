@@ -30,6 +30,8 @@ type Config struct {
 	SeverityWeights               map[int]float64
 	AgingRate                     float64
 	OperatorID                    string
+	FleetPort                     int
+	AgentBaseURL                  string
 }
 
 const (
@@ -42,7 +44,9 @@ const (
 	defaultExtractionConfidenceThreshold = 0.75         // OQ-4
 	defaultPendingActionTTLSeconds       = 600          // DEC-019
 	defaultAgingRate                     = 1.0          // OQ-5
-	defaultOperatorID                    = "operator-1" // OQ-7
+	defaultOperatorID                    = "operator-1"            // OQ-7
+	defaultFleetPort                     = 8080                    // matches agent's default FLEET_GRAPHQL_URL
+	defaultAgentBaseURL                  = "http://localhost:8081" // matches agent's default AGENT_PORT
 )
 
 // defaultSeverityWeights is OQ-5's recorded default: severity_weight =
@@ -121,9 +125,13 @@ func load(lookup lookupFunc) (Config, error) {
 		OpenRouterExtractionModel: getString(lookup, "OPENROUTER_EXTRACTION_MODEL", defaultOpenRouterExtractionModel),
 		FleetDBPath:               getString(lookup, "FLEET_DB_PATH", defaultFleetDBPath),
 		OperatorID:                getString(lookup, "OPERATOR_ID", defaultOperatorID),
+		AgentBaseURL:              getString(lookup, "AGENT_BASE_URL", defaultAgentBaseURL),
 	}
 
 	var err error
+	if cfg.FleetPort, err = getInt(lookup, "FLEET_PORT", defaultFleetPort); err != nil {
+		return Config{}, err
+	}
 	if cfg.FleetSpeedMultiplier, err = getFloat(lookup, "FLEET_SPEED_MULTIPLIER", defaultFleetSpeedMultiplier); err != nil {
 		return Config{}, err
 	}

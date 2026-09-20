@@ -5,6 +5,18 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run --exclude '**/*.live.test.ts'",
+    "test:live": "vitest run live.test.ts",
+    "start": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "@mastra/core": "^1.67.0",
+    "express": "^5.2.1",
+    "graphql-request": "^7.4.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "tsx": "^4.23.15"
   }
 }

@@ -19,9 +19,10 @@ import (
 
 func (r *mutationResolver) ProposeAssignCall(ctx context.Context, input generated.ProposeAssignCallInput) (*generated.PendingAction, error) {
 	a, err := r.Manager.ProposeAssignCall(ctx, input.CallID, input.UnitID, actions.ProposeInput{
-		ProposedBy: domain.ProposedBy(input.ProposedBy),
-		Rationale:  input.Rationale,
-		AgentRunID: input.AgentRunID,
+		ProposedBy:     domain.ProposedBy(input.ProposedBy),
+		Rationale:      input.Rationale,
+		AgentRunID:     input.AgentRunID,
+		IdempotencyKey: derefOrEmpty(input.IdempotencyKey),
 	})
 	if err != nil {
 		return nil, err
@@ -31,9 +32,10 @@ func (r *mutationResolver) ProposeAssignCall(ctx context.Context, input generate
 
 func (r *mutationResolver) ProposeRerouteUnit(ctx context.Context, input generated.ProposeRerouteUnitInput) (*generated.PendingAction, error) {
 	a, err := r.Manager.ProposeRerouteUnit(ctx, input.UnitID, input.CallID, actions.ProposeInput{
-		ProposedBy: domain.ProposedBy(input.ProposedBy),
-		Rationale:  input.Rationale,
-		AgentRunID: input.AgentRunID,
+		ProposedBy:     domain.ProposedBy(input.ProposedBy),
+		Rationale:      input.Rationale,
+		AgentRunID:     input.AgentRunID,
+		IdempotencyKey: derefOrEmpty(input.IdempotencyKey),
 	})
 	if err != nil {
 		return nil, err
@@ -43,9 +45,10 @@ func (r *mutationResolver) ProposeRerouteUnit(ctx context.Context, input generat
 
 func (r *mutationResolver) ProposeAssignBackupUnit(ctx context.Context, input generated.ProposeAssignBackupUnitInput) (*generated.PendingAction, error) {
 	a, err := r.Manager.ProposeAssignBackupUnit(ctx, input.CallID, input.UnitID, actions.ProposeInput{
-		ProposedBy: domain.ProposedBy(input.ProposedBy),
-		Rationale:  input.Rationale,
-		AgentRunID: input.AgentRunID,
+		ProposedBy:     domain.ProposedBy(input.ProposedBy),
+		Rationale:      input.Rationale,
+		AgentRunID:     input.AgentRunID,
+		IdempotencyKey: derefOrEmpty(input.IdempotencyKey),
 	})
 	if err != nil {
 		return nil, err
@@ -55,12 +58,23 @@ func (r *mutationResolver) ProposeAssignBackupUnit(ctx context.Context, input ge
 
 func (r *mutationResolver) ProposeResolveEvent(ctx context.Context, input generated.ProposeResolveEventInput) (*generated.PendingAction, error) {
 	a, err := r.Manager.ProposeResolveEvent(ctx, input.DispatchEventID, actions.ProposeInput{
-		ProposedBy: domain.ProposedBy(input.ProposedBy),
-		Rationale:  input.Rationale,
-		AgentRunID: input.AgentRunID,
+		ProposedBy:     domain.ProposedBy(input.ProposedBy),
+		Rationale:      input.Rationale,
+		AgentRunID:     input.AgentRunID,
+		IdempotencyKey: derefOrEmpty(input.IdempotencyKey),
 	})
 	if err != nil {
 		return nil, err
 	}
 	return mapPendingAction(a), nil
+}
+
+// derefOrEmpty returns "" for a nil pointer so an omitted GraphQL
+// idempotencyKey falls back to internal/actions' default derivation
+// (DEC-037) rather than an explicit empty-string key.
+func derefOrEmpty(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }

@@ -17,12 +17,20 @@ still return the resulting EXECUTED PendingAction for audit visibility.
 # (CLAUDE.md), so its write tools pass proposedBy: AGENT and agentRunId
 # explicitly — there is no request-level auth in Phase 1 to derive caller
 # identity from (OQ-7), so the caller states it (DEC-038).
+#
+# idempotencyKey is optional on all four; omitted/null falls back to the
+# type's default derivation (type + natural subject ids, DEC-037). S7's agent
+# write tools pass an explicit key derived from call id + attempt (ROADMAP S7
+# c6, DEC-040) so a repeated triage of the same call at the same attempt
+# collides on retry instead of double-queuing, without changing S6's own
+# default-key behavior for OPERATOR/SYSTEM callers that omit it.
 input ProposeAssignCallInput {
   callId: ID!
   unitId: ID!
   rationale: String!
   proposedBy: ProposedBy! = OPERATOR
   agentRunId: ID
+  idempotencyKey: String
 }
 
 input ProposeRerouteUnitInput {
@@ -31,6 +39,7 @@ input ProposeRerouteUnitInput {
   rationale: String!
   proposedBy: ProposedBy! = OPERATOR
   agentRunId: ID
+  idempotencyKey: String
 }
 
 input ProposeAssignBackupUnitInput {
@@ -39,6 +48,7 @@ input ProposeAssignBackupUnitInput {
   rationale: String!
   proposedBy: ProposedBy! = OPERATOR
   agentRunId: ID
+  idempotencyKey: String
 }
 
 input ProposeResolveEventInput {
@@ -46,6 +56,7 @@ input ProposeResolveEventInput {
   rationale: String!
   proposedBy: ProposedBy! = OPERATOR
   agentRunId: ID
+  idempotencyKey: String
 }
 
 type Mutation {
