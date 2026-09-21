@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CopilotProvider } from './copilot/CopilotProvider';
 import { loadConfig } from './config';
 import { createGqlClient } from './gql/client';
 import { CALL_AUDIT_QUERY } from './gql/documents';
@@ -65,25 +64,23 @@ export function App() {
   }
 
   return (
-    <CopilotProvider>
-      <main>
-        <h1>EMS Fleet Operator Dashboard</h1>
-        <FleetBoard
-          units={fleetStatus.units}
-          calls={fleetStatus.calls}
-          dispatchEvents={fleetStatus.dispatchEvents}
-        />
-        <CallQueue calls={fleetStatus.calls} selectedCallId={selectedCallId} onSelectCall={setSelectedCallId} />
-        <ApprovalPanel
-          actions={pendingActions}
-          units={fleetStatus.units}
-          toolCallLogsByAgentRunId={toolCallLogsByAgentRunId}
-          client={client}
-          onActionUpdated={refetch}
-        />
-        <EventLog dispatchEvents={fleetStatus.dispatchEvents} />
-        <CallAuditDrawer client={client} callId={selectedCallId} onClose={() => setSelectedCallId(null)} />
-      </main>
-    </CopilotProvider>
+    <main>
+      <h1>EMS Fleet Operator Dashboard</h1>
+      <FleetBoard
+        units={fleetStatus.units}
+        calls={fleetStatus.calls}
+        dispatchEvents={fleetStatus.dispatchEvents}
+      />
+      <CallQueue calls={fleetStatus.calls} selectedCallId={selectedCallId} onSelectCall={setSelectedCallId} />
+      <ApprovalPanel
+        actions={pendingActions}
+        units={fleetStatus.units}
+        toolCallLogsByAgentRunId={toolCallLogsByAgentRunId}
+        client={client}
+        onActionUpdated={refetch}
+      />
+      <EventLog dispatchEvents={fleetStatus.dispatchEvents} />
+      <CallAuditDrawer client={client} callId={selectedCallId} onClose={() => setSelectedCallId(null)} />
+    </main>
   );
 }

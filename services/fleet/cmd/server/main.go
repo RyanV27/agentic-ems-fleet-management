@@ -117,7 +117,26 @@ func buildApp(ctx context.Context, cfg config.Config) (*app, error) {
 	mux := http.NewServeMux()
 	mux.Handle("/query", srv)
 
-	return &app{store: st, clock: clock, manager: mgr, handler: mux}, nil
+	return &app{store: st, clock: clock, manager: mgr, handler: withCORS(mux)}, nil
+}
+
+// withCORS allows any origin to call the GraphQL endpoint. The web dashboard
+// (Vite, port 5173) and the fleet service (port 8080) are different origins,
+// so a browser blocks the dashboard's fetch calls without this. There is no
+// auth or cookie-based session anywhere in this system and no real patient
+// data (CLAUDE.md hard rule 4), so a permissive origin has no confidentiality
+// cost here.
+func withCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func run() error {
